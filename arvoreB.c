@@ -1,5 +1,6 @@
 #include<stdio.h>
 #include<stdlib.h>
+#include<math.h>
 #include<locale.h>
 
 #define B 5
@@ -18,7 +19,7 @@ typedef struct arvB {
     NoArvB *raiz;       //raiz da arvore
 }ArvoreB;
 
-void criaArvore(ArvoreB *arvB) {
+void CriaArvore(ArvoreB *arvB) {
     NoArvB *x = (NoArvB*)malloc(sizeof(NoArvB)); //aloca novo no na memoria
     x->folha = 1;                                //como a arovre esta sendo criada, o no e folha
     x->n = 0;                                    //numero de elementos dentro do no e zero
@@ -26,43 +27,45 @@ void criaArvore(ArvoreB *arvB) {
     arvB->raiz = x;                              //atribui no a raiz da arvore B
 }
 
-int BuscaArvoreB(NoArvB *r, int k) { //r = raiz; k = elemento de busca
-    int i=0; //indice comeca no 0 em c
+int BuscaNo(NoArvB *r, int k) { //r = raiz; k = elemento de busca
+    int esquerda = 0, direita = r->n - 1, meio;
+    float media;
 
-    while(i<=r->n && k>r->chave[i]) { //verifica se i È menor ou igual o tamanho total de chaves ocupadas do no
-        i++;                          //e se k È maior que a chave na posicao i
-    }                                 //enquanto sim, i aumenta para percorrer o restante do no
+    while (esquerda <= direita) {
+        media = (float)(esquerda + direita) / 2; 
+        meio = ceil(media); // Usa ceil para padronizar o arredondamento para cima
 
-    if(i<=r->n && k==r->chave[i]) { //verifica se i È menor ou igual o tamanho de chaves ocupadas do no
-        return 1;                  //e se k È igual a chave na posicao i
-    }                              //se sim, retorna que sim
-    if(r->folha) {         //se nao achou, verifica se no È folha
-        return 0;       //se sim, retorna que nao achou
+        if (r->chave[meio] == k) {
+            return 1; // Chave encontrada
+        } else if (r->chave[meio] < k) {
+            esquerda = ++meio;
+        } else {
+            direita = meio - 1;
+        }
     }
-    else {                                       //se nao achou e tem filho, procura no filho
-        //Leitura(r->filho[i];                   //le o filho no disco
-        return BuscaArvoreB(r->filho[i], k);     //funcao recursiva no filho
-    }
+
+    return -meio; // Retorna negativo para dizer que nao encontrou e a posicao onde deveria estar
 }
 
 void SplitChildArvoreB(NoArvB *x, int i) { //x = no pai do no onde o elemento sera inserido; i = indice do no filho
     NoArvB *z = (NoArvB*)malloc(sizeof(NoArvB));
-    z->folha = x->filho[i]->folha;                                  //ERRO AQUI
+    NoArvB *y = x->filho[i];
+    z->folha = y->folha;
     z->n = T-1;
 
     for(int j=0; j<T-1; j++) {
-        z->chave[j] = x->filho[i]->chave[j+T];
+        z->chave[j] = y->chave[j+T];
     }
 
-    if(!x->filho[i]->folha) {
+    if(!y->folha) {
         for(int j=0; j<T; j++) {
-            z->filho[j] = x->filho[i]->filho[j+T];
+            z->filho[j] = y->filho[j+T];
         }
     }
 
-    x->filho[i]->n = T-1;
+    y->n = T-1;
 
-    for(int j=x->n+1; j>i+1; j--) {
+    for(int j=x->n+1; j>i+1; j--) {                         // ERRO AQUI
         x->filho[j+1] = x->filho[j];
     }
 
@@ -72,80 +75,81 @@ void SplitChildArvoreB(NoArvB *x, int i) { //x = no pai do no onde o elemento se
         x->chave[j+1] = x->chave[j];
     }
 
-    x->chave[i] = x->filho[i]->chave[T];
+    x->chave[i] = y->chave[T];
     x->n++;
 
-    //Escrita(x->filho[i]);
+    //Escrita(y);
     //Escrita(z);
     //Escrita(x);
 }
 
-void InsereNaoCheioArvoreB(NoArvB *x, int k) {  //x = no onde sera inserido o elemento; k = elemento a ser inserido
-    int i = x->n; //indice que comeca no fim do no
-
-    if(x->folha) { //verifica se o no x e folha
-        while(i>=0 && k<x->chave[i]) {      //enquanto i for maior ou igual a 0 e k menor que a chave na posicao i
-            x->chave[i+1] = x->chave[i];    //chave da posicao seguinte recebe chave da posicao atual
-            i--;                            //i diminui (vai pra esquerda)
+void InsereNaoCheioArvoreB(NoArvB *x, int k, int pos) {  //x = no onde sera inserido o elemento; k = elemento a ser inserido
+    if (x->n == pos) {
+        x->chave[pos] = k;
+        x->n++;
+    } else {
+        for (int i = x->n; i > pos; i--) {
+            x->chave[i] = x->chave[i - 1];
         }
-        x->chave[i+1] = k;              //chave da posicao seguinte recebe o elemento
-        x->n++;                         //numero de chaves ocupadas do no aumenta 1
-        //Escrita(x);
-    }
-    else { //se x nao for folha
-        while(i>=0 && k<x->chave[i]) {  //enquanto i for maior ou igual a 0 e k menor que o elemento da chave na posicao i
-            i--;                        //i diminui (indice vai pra esquerda)
-        }
-        i++;       //i aumenta (indice vai pra esquerda)
-
-        //Leitura(x->filho[i];
-
-        if(x->filho[i]->n == 2*T-1) {  //verifica se o filho na posicao i vezes o numero de chaves preenchidas e igual a b pra ver se o no esta cheio
-            SplitChildArvoreB(x, i);   //faz split
-
-            if(k>x->chave[i]) {   //se k for maior que chave na posicao i
-                i++;   //i aumenta (indice vai pra direita)
-            }
-        }
-
-        InsereNaoCheioArvoreB(x->filho[i], k); //faz a propria funcao no filho
+        x->chave[pos] = k;
+        x->n++;
     }
 }
 
 void InsereArvoreB(NoArvB *r, int k) { //r = raiz; k = elemento a ser inserido; t = termo de limitacao
+
+    // Busca no n√≥ pra ver se tem o elemento
+    int busca;
+    while (1)
+    {
+        busca = BuscaNo(r, k);
+        if (busca > 0) return; // Se a busca retornar positivo, o elemento j√° existe, ent√£o n√£o insere
+
+        if (r->folha)
+        {
+            break; // Se o n√≥ for folha, ent√£o sai do loop para inserir o elemento
+        }
+
+        // Se n√£o for folha, ent√£o vai para o filho onde o elemento deveria estar e busca de novo
+        r = r->filho[-busca]; // Se a busca retornar negativo, o elemento n√£o existe e x √© o filho onde o elemento deveria estar inserido
+    }
+
     if(r->n == 2*T-1) {    //verifica se o no esta cheio pela equacao com o termo t
         NoArvB *s = (NoArvB*)malloc(sizeof(NoArvB));    //se esta cheio, alocar novo no (raiz)
         s->folha = 0;                  //folha vazia, ie, ele mesmo e folha
         s->n = 0;                      //numero de elementos no no = 0
-        s->filho[0] = r;               //ponteiro do novo no aponta pra raiz
-        SplitChildArvoreB(s, 1);       //faz split                                                             //ERRO AQUI
-        InsereNaoCheioArvoreB(s, k);   //insere o elemento no novo no
+        s->filho[1] = r;               //ponteiro do novo no aponta pra raiz
+        SplitChildArvoreB(s, 1);       //faz split
+
+        InsereNaoCheioArvoreB(s, k, 0);   //insere o elemento no novo no
     }
     else {                            //se nao esta cheio
-        InsereNaoCheioArvoreB(r, k);  //insere no no
+        InsereNaoCheioArvoreB(r, k, -busca);  //insere no no 
     }
 }
 
 void ImprimeArvoreB(NoArvB *r, int nivel) {
-    if (r == NULL) return;
-
-    int i;
-    for(i=0; i<r->n; i++) {
-        //imprime o filho da esquerda (sub·rvore) recursivamente
-        if (!r->folha) {
-            ImprimeArvoreB(r->filho[i], nivel+1);
-        }
-
-        //imprime o nivel e a chave do no
-        for(int j=0; j<nivel; j++) {
-            printf("    ");  //imprime espaÁos para formatar a arvore
-        }
-        printf("%d\n", r->chave[i]);
+    if (r == NULL) {
+        printf("Arvore vazia\n");
+        return;
     }
 
-    //imprime o ˙ltimo filho (sub·rvore)
+    // Imprimir a indenta√ß√£o baseada no n√≠vel atual (inversamente proporcional ao n√≠vel)
+    for (int i = 0; i < T * 2 - nivel; i++) {
+        printf("\t");
+    }
+
+    // Imprimir chaves do n√≥ atual
+    for (int chaveIndex = 0; chaveIndex < r->n; chaveIndex++) {
+        printf("|%d| ", r->chave[chaveIndex]);
+    }
+    printf("\n");
+
+    // Se o n√≥ n√£o for uma folha, printar seus filhos recursivamente
     if (!r->folha) {
-        ImprimeArvoreB(r->filho[i], nivel+1);
+        for (int filhoIndex = 0; filhoIndex <= r->n; filhoIndex++) {
+            ImprimeArvoreB(r->filho[filhoIndex], nivel + 1);
+        }
     }
 }
 
@@ -153,10 +157,11 @@ int main() {
     setlocale(LC_ALL, "Portuguese");
 
     ArvoreB *arvB = (ArvoreB*)malloc(sizeof(ArvoreB));
+
     arvB->b = B;
     arvB->t = T;
 
-    criaArvore(arvB);
+    CriaArvore(arvB);
 
     InsereArvoreB(arvB->raiz, 10);
     InsereArvoreB(arvB->raiz, 5);
@@ -165,6 +170,7 @@ int main() {
     InsereArvoreB(arvB->raiz, 5);
     InsereArvoreB(arvB->raiz, 2);
     InsereArvoreB(arvB->raiz, 22);
+
 
     ImprimeArvoreB(arvB->raiz, 0);
 
