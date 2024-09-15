@@ -6,10 +6,10 @@
 #define T 3 //2t-1 = b <=> 2t-1 = 5 => t = 3
 
 typedef struct no {
-    int n;                    //numero total de elementos inseridos num no
-    int folha;                //booleano, verifica se o no e folha
-    int chave[B];           //vetor de chaves
-    struct no *filho[B+1];  //vetor de ponteiros que apontam para os filhos
+    int n;                   //numero total de elementos inseridos num no
+    int folha;               //booleano, verifica se o no e folha
+    int *chave;              //vetor de chaves
+    struct no **filho;       //vetor de ponteiros que apontam para os filhos
 }NoArvB;
 
 typedef struct arvB {
@@ -18,12 +18,20 @@ typedef struct arvB {
     NoArvB *raiz;       //raiz da arvore
 }ArvoreB;
 
-void criaArvore(ArvoreB *arvB) {
-    NoArvB *x = (NoArvB*)malloc(sizeof(NoArvB)); //aloca novo no na memoria
-    x->folha = 1;                                //como a arovre esta sendo criada, o no e folha
-    x->n = 0;                                    //numero de elementos dentro do no e zero
+void criaArvore(ArvoreB *arvB, int t) {
+    int b = 2*t-1;
+
+    arvB->t = t;
+    arvB->b = b;
+
+    NoArvB *x = (NoArvB*)malloc(sizeof(NoArvB));      //aloca novo no na memoria
+    x->folha = 1;                                     //como a arovre esta sendo criada, o no e folha
+    x->n = 0;                                         //numero de elementos dentro do no e zero
+    x->chave = (int*)malloc(b*sizeof(int));
+    x->filho = (NoArvB**)malloc(1+b*sizeof(NoArvB));
     //Escrita(x);
-    arvB->raiz = x;                              //atribui no a raiz da arvore B
+    arvB->raiz = x;                                   //atribui no a raiz da arvore B
+
 }
 
 int BuscaArvoreB(NoArvB *r, int k) { //r = raiz; k = elemento de busca
@@ -126,6 +134,10 @@ void InsereArvoreB(NoArvB *r, int k) { //r = raiz; k = elemento a ser inserido; 
     }
 }
 
+void RemoveArvoreB(NoArvB *r, int k) {
+
+}
+
 void ImprimeArvoreB(NoArvB *r, int nivel) {
     if (r == NULL) return;
 
@@ -153,20 +165,141 @@ int main() {
     setlocale(LC_ALL, "Portuguese");
 
     ArvoreB *arvB = (ArvoreB*)malloc(sizeof(ArvoreB));
-    arvB->b = B;
-    arvB->t = T;
 
-    criaArvore(arvB);
+    int language, menu;
 
-    InsereArvoreB(arvB->raiz, 10);
-    InsereArvoreB(arvB->raiz, 5);
-    InsereArvoreB(arvB->raiz, 15);
-    InsereArvoreB(arvB->raiz, 20);
-    InsereArvoreB(arvB->raiz, 5);
-    InsereArvoreB(arvB->raiz, 2);
-    InsereArvoreB(arvB->raiz, 22);
+    do{
+        printf("Select your language: "
+               "\n[1] English"
+               "\n[2] Portuguese (Coming soon...)\n\n");
+        scanf("%d",&language);
 
-    ImprimeArvoreB(arvB->raiz, 0);
+        system("cls");
+    }while(language<1 || language>2);
+
+    int t, k;
+
+    switch(language) {
+        case 1:
+            printf("\n\tWelcome to the B Tree interface!\n\n");
+            system("pause");
+            system("cls");
+
+            do{
+                printf("\n[1] Create B Tree"
+                       "\n[2] Destroy B Tree"
+                       "\n[3] Search an element"
+                       "\n[4] Insert an element"
+                       "\n[5] Remove an element"
+                       "\n[6] Print B Tree"
+                       "\n[0] Exit\n\n");
+                scanf("%d",&menu);
+
+                system("cls");
+
+                switch(menu) {
+                    case 0:
+                        break;
+
+                    case 1:
+                        if(arvB->raiz == NULL) {
+                            do{
+                                printf("\nChoose the t value (an integer t>=2): ");
+                                scanf("%d",&t);
+
+                                system("cls");
+                            }while(t<2);
+
+                            criaArvore(arvB, t);
+                        }
+                        else{
+                            printf("\nA B Tree already exists in memory. Destroy it before creating another one.\n\n");
+                            system("pause");
+                            system("cls");
+                        }
+
+                        break;
+
+                    case 2:
+
+                        break;
+
+                    case 3:
+                        if(arvB->raiz != NULL) {
+                            if(arvB->raiz->chave[0] != NULL) {
+                                printf("Type the element you are looking for: ");
+                                scanf("%d",&k);
+
+                                BuscaArvoreB(arvB->raiz, k);
+                            }
+                            else{
+                                printf("Insert an element before searching for it!\n\n");
+                                system("pause");
+                                system("cls");
+                            }
+                        }
+                        else{
+                            printf("Create a B Tree before searching for an element!\n\n");
+                            system("pause");
+                            system("cls");
+                        }
+
+                        break;
+
+                    case 4:
+                        if(arvB != NULL) {
+                            printf("Type the element you want to insert: ");
+                            scanf("%d",&k);
+
+                            InsereArvoreB(arvB->raiz, k);
+                        }
+                        else{
+                            printf("Create a B Tree before inserting an element!\n\n");
+                            system("pause");
+                            system("cls");
+                        }
+
+                        break;
+
+                    case 5:
+
+                        break;
+
+                    case 6:
+                        if(arvB != NULL) {
+                            ImprimeArvoreB(arvB->raiz, 0);
+                        }
+                        else{
+                            printf("Create a B Tree before printing it!\n\n");
+                            system("pause");
+                            system("cls");
+                        }
+
+                        break;
+
+                    default:
+                        printf("\nChoose a valid option!\n\n");
+                        system("pause");
+                        system("cls");
+
+                        break;
+                }
+
+            }while(menu!=0);
+
+            break;
+
+        case 2:
+            printf("\n\tBem-vindo à interface de Árvore B\n\n");
+            system("pause");
+            system("cls");
+
+            do{
+                menu = 0;
+            }while(menu!=0);
+
+            break;
+    }
 
     return 0;
 }
