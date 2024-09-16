@@ -47,7 +47,7 @@ int main() {
                         diretorio = escolheDiretorio();
 
                         if(diretorio != NULL) {
-                            FILE *file = fopen(diretorio, "r+");
+                            FILE *file = fopen(diretorio, "rb+");
                             InterfaceArvBIngles(file, diretorio);
                             fclose(file);
 

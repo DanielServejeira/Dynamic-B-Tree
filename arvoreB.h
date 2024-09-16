@@ -2,7 +2,7 @@
 #define ARVORE_B
 
 typedef struct no {
-    int nome[21];            //nome aleatorio do no de 16 caracteres + 4 .dat + 1 \0
+    int nome[16];            //nome aleatorio do no de 16 caracteres
     int n;                   //numero total de elementos inseridos num no
     int folha;               //booleano, verifica se o no e folha
     int *chave;              //vetor de chaves
@@ -16,8 +16,9 @@ typedef struct arvB {
 
 void CriaArvoreB(ArvoreB *arvB, int t);
 void DestroiArvoreB(ArvoreB *arvB);
+int BuscaArvoreB(NoArvB *r, int k);
 int BuscaNo(NoArvB *r, int k);
-void SplitChildArvoreB(NoArvB *x, int i, int t);
+void SplitChildArvoreB(NoArvB *raiz, int i, int t);
 void InsereNaoCheioArvoreB(NoArvB *x, int k, int t);
 void InsereArvoreB(NoArvB *r, int k, int t);
 void RemoveArvoreB(NoArvB *r, int k, int t);
