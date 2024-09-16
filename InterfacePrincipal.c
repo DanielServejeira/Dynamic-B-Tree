@@ -1,17 +1,18 @@
 #include<stdio.h>
 #include<locale.h>
 
-#include "arvoreB.h"
 #include "funcoesDisco.h"
+#include "arvoreB.h"
 
 int main() {
     setlocale(LC_ALL, "Portuguese");
 
     int idioma, menuArq;
-    char *arquivo;
+    char *diretorio;
 
     do{
-        printf("Select your language: "
+        printf("By Daniel Servejeira & Raphael Leiva\n"
+               "\nSelect your language: "
                "\n[1] English"
                "\n[2] Portuguese (Coming soon...)\n\n");
         scanf("%d",&idioma);
@@ -22,9 +23,9 @@ int main() {
     switch(idioma) {
         case 1:
             do{
-                printf("\n[1] Create a file"
-                       "\n[2] Delete a file"
-                       "\n[3] Modify a file"
+                printf("\n[1] Create a directory"
+                       "\n[2] Delete a directory"
+                       "\n[3] Modify a directory"
                        "\n[0] Exit\n\n");
                 scanf("%d",&menuArq);
 
@@ -35,27 +36,22 @@ int main() {
                         break;
 
                     case 1:
-                        criaArquivo();
+                        criaDiretorio();
                         break;
 
                     case 2:
-                        deletaArquivo();
+                        deletaDiretorio();
                         break;
 
                     case 3:
-                        arquivo = escolheArquivo();
+                        diretorio = escolheDiretorio();
 
-                        if(arquivo != NULL) {
-                            FILE *file = fopen(arquivo, "r+");
+                        if(diretorio != NULL) {
+                            FILE *file = fopen(diretorio, "r+");
+                            InterfaceArvBIngles(file, diretorio);
+                            fclose(file);
 
-                            if(file != NULL) {
-                                interfaceArvBIngles(file);
-                                fclose(file);
-                            }
-                            else {
-                                printf("Error opening file '%s'.\n", arquivo);
-                            }
-                            free(arquivo);
+                            free(diretorio);
                         }
                         else {
                             printf("No valid file chosen.\n");

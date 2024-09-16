@@ -1,9 +1,47 @@
 #include<stdio.h>
 #include<stdlib.h>
+#include <time.h>
 #include<dirent.h>
 #include<sys/types.h>
 #include<sys/stat.h>
 #include<unistd.h>
+#include<string.h>
+
+#include "funcoesDisco.h"
+
+char *geraNomeArquivo() {
+    char nome[16];
+    const char caracteres[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+
+    //inicializa a semente para a função rand usando o tempo atual
+    srand(time(NULL));
+
+    //gera 16 caracteres aleatórios
+    for(int i=0; i<16; i++) {
+        nome[i] = caracteres[rand()%(sizeof(caracteres)-1)];
+    }
+
+    nome[16] = '\0';
+
+    return nome;
+}
+
+FILE *criaArquivoBinario() {
+    char nomeArquivo[16];  //nome com 16 caracteres
+    strcpy(nomeArquivo, geraNomeArquivo());  //gera um nome de 16 caracteres
+
+    FILE *file = fopen(nomeArquivo, "wb+");
+    if(file == NULL) {
+        printf("Error creating file %s.\n", nomeArquivo);
+        return NULL;
+    }
+
+    printf("File '%s' created successfully!\n", nomeArquivo);
+
+    fclose(file);
+
+    return file;
+}
 
 void Escrita(FILE *arquivo, NoArvB *x, int posicao) {
     fseek(arquivo, posicao*sizeof(NoArvB), SEEK_SET);
@@ -15,99 +53,43 @@ void Leitura(FILE *arquivo, NoArvB *x, int posicao) {
     fread(x, sizeof(NoArvB), 1, arquivo);
 }
 
-void criaArquivo() {
-    char aux[32];
+void criaDiretorio() {
+    char aux[256];
 
-    printf("\nName the archive: ");
-    fgets(aux, 32, stdin);
-    aux[strcspn(aux, "\n")] = 0;
+    printf("\nName the directory: ");
+    fgets(aux, 256, stdin);
+    aux[strcspn(aux, "\n")] = 0;  //remove o newline do final
 
-    if (strstr(aux, ".dat") == NULL) {
-        strcat(aux, ".dat");
-    }
-
-    FILE *file = fopen(aux, "wb+");
-
-    if (file == NULL) {
-        printf("Error creating the file!\n");
+    //cria o diretório
+    if (_mkdir(aux, 0777) == 0) {
+        printf("Directory '%s' created successfully!\n", aux);
     } else {
-        printf("File '%s' created successfully!\n", aux);
-        fclose(file);
+        printf("Error creating the directory!\n");
     }
 }
 
-void deletaArquivo() {
+void deletaDiretorio() {
     struct dirent *de;
     DIR *dr = opendir(".");
 
     if (dr == NULL) {
-        printf("\nError opening directory\n");
+        printf("Error opening directory.\n");
         return;
     }
 
-    char arquivos[100][256];  //array que armazena os arquivos binarios
+    char diretorios[100][256];  // Array para armazenar os nomes dos diretórios
     int cont = 0;
 
-    printf("\nAvailable .dat files for deletion:\n");
+    printf("\nAvailable directories for deletion:\n");
 
-    // List .dat files in the directory
+    // Listar diretórios no diretório atual
     while ((de = readdir(dr)) != NULL) {
         struct stat st;
-        if (stat(de->d_name, &st) == 0 && S_ISREG(st.st_mode)) {
-            if (strstr(de->d_name, ".dat") != NULL) {
-                printf("[%d] %s\n", cont, de->d_name);
-                strcpy(arquivos[cont], de->d_name);
-                cont++;
-            }
-        }
-    }
-
-    closedir(dr);
-
-    if(cont == 0) {
-        printf("No .dat files available for deletion.\n");
-        return;
-    }
-
-    int escolha;
-    printf("\nChoose the file to delete by index: ");
-    scanf("%d", &escolha);
-    getchar();  // Clear the newline buffer
-
-    if(escolha < 0 || escolha >= cont) {
-        printf("Invalid index!\n");
-        return;
-    }
-
-    // Delete the chosen file
-    if(remove(arquivos[escolha]) == 0) {
-        printf("File '%s' deleted successfully.\n", arquivos[escolha]);
-    } else {
-        printf("Error deleting the file '%s'.\n", arquivos[escolha]);
-    }
-}
-
-char *escolheArquivo() {
-    struct dirent *de;
-    DIR *dr = opendir(".");
-
-    if(dr == NULL) {
-        printf("Error opening directory.\n");
-        return NULL;
-    }
-
-    char arquivos[100][256];  //array que armazena os arquivos binarios
-    int cont = 0;
-
-    printf("Available .dat files:\n");
-
-    //lista os arquivos binarios do diretorio
-    while((de = readdir(dr)) != NULL) {
-        struct stat st;
-        if (stat(de->d_name, &st) == 0 && S_ISREG(st.st_mode)) {
-            if (strstr(de->d_name, ".dat") != NULL) {
-                printf("[%d] %s\n", cont, de->d_name);
-                strcpy(arquivos[cont], de->d_name);
+        if (stat(de->d_name, &st) == 0 && S_ISDIR(st.st_mode)) {
+            // Ignorar diretórios "." e ".."
+            if (strcmp(de->d_name, ".") != 0 && strcmp(de->d_name, "..") != 0) {
+                printf("[%d] %s\n", cont, de->d_name);  // Mostra o índice e o nome do diretório
+                strcpy(diretorios[cont], de->d_name);   // Copia o nome do diretório para o array
                 cont++;
             }
         }
@@ -116,12 +98,64 @@ char *escolheArquivo() {
     closedir(dr);
 
     if (cont == 0) {
-        printf("No .dat files available.\n");
+        printf("No directories available for deletion.\n");
+        return;
+    }
+
+    int escolha;
+    printf("\nChoose the directory to delete by index: ");
+    scanf("%d", &escolha);
+    getchar();  //limpa o buffer
+
+    if (escolha < 0 || escolha >= cont) {
+        printf("Invalid index!\n");
+        return;
+    }
+
+    // Deleta o diretório escolhido
+    if (rmdir(diretorios[escolha]) == 0) {
+        printf("Directory '%s' deleted successfully.\n", diretorios[escolha]);
+    } else {
+        printf("Error deleting directory '%s'.\n", diretorios[escolha]);
+    }
+}
+
+char *escolheDiretorio() {
+    struct dirent *de;
+    DIR *dr = opendir(".");
+
+    if (dr == NULL) {
+        printf("Error opening directory.\n");
+        return NULL;
+    }
+
+    char diretorios[100][256];  // Array para armazenar os nomes dos diretórios
+    int cont = 0;
+
+    printf("Available directories:\n");
+
+    // Listar diretórios no diretório atual
+    while ((de = readdir(dr)) != NULL) {
+        struct stat st;
+        if (stat(de->d_name, &st) == 0 && S_ISDIR(st.st_mode)) {
+            //ignorar diretórios "." e ".."
+            if (strcmp(de->d_name, ".") != 0 && strcmp(de->d_name, "..") != 0) {
+                printf("[%d] %s\n", cont, de->d_name);  // Mostra o índice e o nome do diretório
+                strcpy(diretorios[cont], de->d_name);   // Copia o nome do diretório para o array
+                cont++;
+            }
+        }
+    }
+
+    closedir(dr);
+
+    if (cont == 0) {
+        printf("No directories available.\n");
         return NULL;
     }
 
     int escolha;
-    printf("\nChoose the file by index: ");
+    printf("\nChoose the directory by index: ");
     scanf("%d", &escolha);
     getchar();  //limpa o buffer
 
@@ -130,12 +164,13 @@ char *escolheArquivo() {
         return NULL;
     }
 
-    char *arquivoEscolhido = malloc(strlen(arquivos[escolha]) + 1);
-    if (arquivoEscolhido == NULL) {
+    // Aloca memória para o nome do diretório escolhido e retorna
+    char *diretorioEscolhido = malloc(strlen(diretorios[escolha]) + 1);
+    if (diretorioEscolhido == NULL) {
         printf("Memory allocation failed.\n");
         return NULL;
     }
-    strcpy(arquivoEscolhido, arquivos[escolha]);
+    strcpy(diretorioEscolhido, diretorios[escolha]);
 
-    return arquivoEscolhido;
+    return diretorioEscolhido;
 }

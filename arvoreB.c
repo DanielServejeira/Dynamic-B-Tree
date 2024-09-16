@@ -2,7 +2,10 @@
 #include<stdlib.h>
 #include<math.h>
 
-void criaArvore(ArvoreB *arvB, int t) {
+#include "arvoreB.h"
+#include "funcoesDisco.h"
+
+void CriaArvoreB(ArvoreB *arvB, int t) {
     int b = 2*t-1;
 
     NoArvB *x = (NoArvB*)malloc(sizeof(NoArvB));      //aloca novo no na memoria
@@ -12,6 +15,7 @@ void criaArvore(ArvoreB *arvB, int t) {
     x->filho = (NoArvB**)malloc(1+b*sizeof(NoArvB));
     //Escrita(x);
     arvB->raiz = x;                                   //atribui no a raiz da arvore B
+    arvB->t = t;
 }
 
 int BuscaNo(NoArvB *r, int k) { //r = raiz; k = elemento de busca
@@ -37,8 +41,14 @@ int BuscaNo(NoArvB *r, int k) { //r = raiz; k = elemento de busca
 }
 
 void SplitChildArvoreB(NoArvB *x, int i, int t) { //x = no pai do no onde o elemento sera inserido; i = indice do no filho
+//    printf("entrou");
+    getchar();
+    getchar();
     NoArvB *z = (NoArvB*)malloc(sizeof(NoArvB));
     NoArvB *y = x->filho[i];
+//    printf("saiu");
+    getchar();
+    getchar();
     z->folha = y->folha;
     z->n = t-1;
 
@@ -54,17 +64,17 @@ void SplitChildArvoreB(NoArvB *x, int i, int t) { //x = no pai do no onde o elem
 
     y->n = t-1;
 
-    for(int j=x->n+1; j>i+1; j--) {                         // ERRO AQUI
+    for(int j=x->n; j>i; j--) {                         // ERRO AQUI
         x->filho[j+1] = x->filho[j];
     }
 
     x->filho[i+1] = z;
 
-    for(int j=x->n; j>i; j--) {
+    for(int j=x->n-1; j>=i; j--) {
         x->chave[j+1] = x->chave[j];
     }
 
-    x->chave[i] = y->chave[t];
+    x->chave[i] = y->chave[t-1];
     x->n++;
 
     //Escrita(y);
@@ -86,7 +96,6 @@ void InsereNaoCheioArvoreB(NoArvB *x, int k, int pos) {  //x = no onde sera inse
 }
 
 void InsereArvoreB(NoArvB *r, int k, int t) { //r = raiz; k = elemento a ser inserido; t = termo de limitacao
-
     //busca no nó pra ver se tem o elemento
     int busca;
     while(1) {
@@ -94,15 +103,17 @@ void InsereArvoreB(NoArvB *r, int k, int t) { //r = raiz; k = elemento a ser ins
         if(busca > 0) return; //se a busca retornar positivo, o elemento já existe, então não insere
 
         if(r->folha) {
-            break; // Se o nó for folha, então sai do loop para inserir o elemento
+            break; //se o nó for folha, então sai do loop para inserir o elemento
         }
 
-        // Se não for folha, então vai para o filho onde o elemento deveria estar e busca de novo
-        r = r->filho[-busca]; // Se a busca retornar negativo, o elemento não existe e x é o filho onde o elemento deveria estar inserido
+        //se não for folha, então vai para o filho onde o elemento deveria estar e busca de novo
+        r = r->filho[-busca]; //se a busca retornar negativo, o elemento não existe e x é o filho onde o elemento deveria estar inserido
     }
 
     if(r->n == 2*t-1) {    //verifica se o no esta cheio pela equacao com o termo t
         NoArvB *s = (NoArvB*)malloc(sizeof(NoArvB));    //se esta cheio, alocar novo no (raiz)
+        FILE *file;
+        //FILE *file = criaArquivoBinario();  //novo no passa a ter um nome aleatorio         //ERRO, NAO ESTA CRIANDO ARQUIVO
         s->folha = 0;                  //folha vazia, ie, ele mesmo e folha
         s->n = 0;                      //numero de elementos no no = 0
         s->filho[1] = r;               //ponteiro do novo no aponta pra raiz
@@ -163,7 +174,7 @@ void RemoveArvoreB(NoArvB *r, int k, int t) {
 
 void ImprimeArvoreB(NoArvB *r, int nivel, int t) {
     if (r == NULL) {
-        printf("Arvore vazia\n");
+        printf("Empty tree\n");
         return;
     }
 
@@ -186,11 +197,11 @@ void ImprimeArvoreB(NoArvB *r, int nivel, int t) {
     }
 }
 
-void interfaceArvBIngles(FILE *arquivo) {
-    ArvoreB *arvB = (ArvoreB*)malloc(sizeof(ArvoreB));
+void InterfaceArvBIngles(FILE *arquivo, char diretorio[]) {
+    ArvoreB *arvB = NULL;
     int menuArvB, t, k;
 
-    printf("\n\tWelcome to the B Tree interface!\n\n");
+    printf("\n\tWelcome to the B Tree interface from %s!\n\n",diretorio);
     system("pause");
     system("cls");
 
@@ -211,13 +222,15 @@ void interfaceArvBIngles(FILE *arquivo) {
                 break;
 
             case 1:
-                if(arvB->raiz == NULL) {
+                if(arvB == NULL) {
+                    arvB = (ArvoreB*)malloc(sizeof(ArvoreB));
+
                     do{
                         printf("\nChoose the t value (an integer t>=2): ");
                         scanf("%d",&t);
                     }while(t<2);
 
-                    criaArvore(arvB, t);
+                    CriaArvoreB(arvB, t);
                 }
                 else printf("\nA B Tree already exists in memory. Destroy it before creating another one.\n");
 
@@ -228,16 +241,16 @@ void interfaceArvBIngles(FILE *arquivo) {
                 break;
 
             case 2:
-
+                //if(arvB!=NULL) DestroiArvoreB(ArvoreB *arvB);
                 break;
 
             case 3:
-                if(arvB->raiz != NULL) {
+                if(arvB != NULL) {
                     if(arvB->raiz->chave[0] != NULL) {
                         printf("\nType the element you are looking for: ");
                         scanf("%d",&k);
 
-                        BuscaNo(arvB->raiz, k);
+                        printf("\n\t%d\n", BuscaNo(arvB->raiz, k));
                     }
                     else printf("\nInsert an element before searching for it!\n");
                 }
@@ -250,7 +263,7 @@ void interfaceArvBIngles(FILE *arquivo) {
                 break;
 
             case 4:
-                if(arvB->raiz != NULL) {
+                if(arvB != NULL) {
                     printf("\nType the element you want to insert: ");
                     scanf("%d",&k);
 
@@ -265,11 +278,11 @@ void interfaceArvBIngles(FILE *arquivo) {
                 break;
 
             case 5:
-
+                //if(arvB!=NULL) RemoveArvoreB(NoArvB *raiz, int k, int t);
                 break;
 
             case 6:
-                if(arvB->raiz != NULL) ImprimeArvoreB(arvB->raiz, 0, t);
+                if(arvB != NULL) ImprimeArvoreB(arvB->raiz, 0, t);
                 else printf("\nCreate a B Tree before printing it!\n");
 
                 printf("\n");
